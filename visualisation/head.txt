@@ -1,0 +1,18 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{dmasproject}
+% if you need additional LaTeX packages, add them here
+
+\title{#title#}
+% sort your names alphabetically by last name
+\author{
+  Loïc THEMYR
+}
+\date{\today} % change this accordingly
+
+\begin{document}
+
+\maketitle
+
+%\begin{abstract}
+%The abstract should briefly summarize your project in 150--250 words.
+%\end{abstract}

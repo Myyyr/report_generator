@@ -1,0 +1,17 @@
+
+
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{#struct#}
+
+
+
+   #table#
+
+
+   \end{tabular}
+  \caption{#caption#}\label{tab:#label#}
+\end{table}
+
+

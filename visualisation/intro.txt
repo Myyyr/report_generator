@@ -1,0 +1,9 @@
+
+
+\section*{Introduction}
+
+Dans ce #exercice# une étude de #cours# est réalisée au travers de données sur #donnees#. Ces données contiennent #contenue_donnees#.
+
+%\subsection{Problem}
+%\subsection{State of the art}
+%\subsection{New idea}

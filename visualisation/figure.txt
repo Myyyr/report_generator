@@ -1,0 +1,10 @@
+
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{#file#}
+  \caption{#caption#}
+  \label{fig:#label#}
+\end{figure}
+
+

@@ -59,6 +59,7 @@ class Analyse():
 		self.tek_intro()
 		self.histogrammes()
 		self.stats()
+		self.correlation()
 
 		self.tek_save()
 
@@ -103,12 +104,15 @@ class Analyse():
 		"""
 		Create / show or save / write latek of histogram plots
 		"""
+
 		hist = self.data.hist()
 		if save: 
 			plt.savefig(self.save_path+"/images/histogrammes.png")
 			self._add_figure("images/histogrammes.png", 'Histogrammes des différentes variables', 'histogrammes')
 		else :
 			plt.show()
+
+		plt.close()
 
 
 	def stats(self):
@@ -121,7 +125,19 @@ class Analyse():
 		table = self._add_table(table, "Tableau descriptif des données", "descript", struct)
 
 
-
+	def correlation(self, save = False):
+		"""
+		Create the correlation matrix and add it to the latek file
+		"""
+		x = range(self.n)
+		y = range(self.p)
+		ax = sns.heatmap(self.data.iloc[x,y].corr(), annot=True, fmt=".2f", linewidths=.5, vmin=-1, vmax=1)
+		figure = ax.get_figure()    
+		
+		figure.savefig(self.save_path+"/images/corr.png")
+		self._add_figure("images/corr.png", 'Corrélation entre les différentes variables', 'corr')
+		
+		plt.close()
 
 
 

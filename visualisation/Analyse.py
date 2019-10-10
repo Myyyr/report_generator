@@ -118,12 +118,12 @@ class Analyse():
 		plt.close()
 
 
-	def stats(self):
+	def stats(self, lim = 0.01):
 		"""
 		Create latek table with mean, std
 		"""
 		desc = self.data.describe()
-		table  = str(desk.round(2))
+		table  = str(desc.round(2))
 		struct = "|l|" + "c|"*(self.p - 1)
 		table = self._add_table(table, "Tableau descriptif des données", "descript", struct)
 
@@ -131,8 +131,26 @@ class Analyse():
 		means = desc.values[1,:]
 		stds = desc.values[2,:]
 
+		self.cache['means'] = means
+		self.cache['stds'] = stds
+
+
 		em = np.std(means)
 		es = np.std(stds)
+
+		text = "Le tableau \\ref\{tab:descript\} donne une déscription des données. "
+		if em > lim:
+			text += "Les moyennes de chaque #variables n'étant pas centrées autour d'une même valeur, il sera préférable par la suite de centrer les données. "
+		else :
+			text += "Les moyennes de chaque #variables étant centrées autour d'une même valeur {}, il ne sera pas obligatoire de centrer les données par la suite. ".format(np.mean(means))
+
+		if es > lim:
+			text += "De plus, les écarts types de chaque variables sont dispersées. Donc il faudra réduire les données pour obtenir des valeurs comparables entre elles. "
+		else:
+			text += "De plus, les écarts types de chaque variables sont équivalentes, avec une valeur proche de {}. Donc il ne sera pas obligatoire de réduire les données pour obtenir des valeurs comparables entre elles. ".format(np.mean(stds))
+
+		text += "\\\\ \n\n\n\n\n\n\n\n\n\n"
+		self.main += text
 
 
 

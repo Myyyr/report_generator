@@ -22,7 +22,7 @@ class Analyse():
 		self.save_path = save_path
 		self.local_path = os.path.dirname(os.path.realpath(__file__))
 		self.main = ""
-
+		self.cache = {}
 
 		if not os.path.exists(save_path):
 			os.makedirs(save_path + "/images")
@@ -57,9 +57,11 @@ class Analyse():
 		"""
 		self.tek_head()
 		self.tek_intro()
-		self.histogrammes()
+		#self.histogrammes()
 		self.stats()
+		self.dispertion()
 		self.correlation()
+		
 
 		self.tek_save()
 
@@ -97,6 +99,7 @@ class Analyse():
 		intro = self._complete_texte(intro, 'donnees')
 		intro = self._complete_texte(intro, 'contenue_donnees')
 
+
 		self.main += intro
 
 
@@ -119,13 +122,21 @@ class Analyse():
 		"""
 		Create latek table with mean, std
 		"""
-
-		table  = str(self.data.describe().round(2))
+		desc = self.data.describe()
+		table  = str(desk.round(2))
 		struct = "|l|" + "c|"*(self.p - 1)
 		table = self._add_table(table, "Tableau descriptif des données", "descript", struct)
 
 
-	def correlation(self, save = False):
+		means = desc.values[1,:]
+		stds = desc.values[2,:]
+
+		em = np.std(means)
+		es = np.std(stds)
+
+
+
+	def correlation(self):
 		"""
 		Create the correlation matrix and add it to the latek file
 		"""
@@ -140,6 +151,16 @@ class Analyse():
 		plt.close()
 
 
+	def dispertion(self):
+		g = sns.pairplot(self.data.iloc[range(self.n),range(self.p)], diag_kind="kde", markers="+",
+		                  plot_kws=dict(s=50, edgecolor="b", linewidth=1),
+		                  diag_kws=dict(shade=True))
+		
+		g.savefig(self.save_path+"/images/disp.png")
+		self._add_figure("images/disp.png", 'Dispersion entre les différentes variables et correlation de chaque variable', 'disp')
+		
+
+		plt.close()
 
 	def _add_table(self, text, caption, label, struct):
 		"""

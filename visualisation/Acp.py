@@ -107,7 +107,7 @@ class Acp(Analyse):
 		
 
 
-	def representation_quality(self, save = True):
+	def pop_quality(self, save = True):
 		"""
 		Compute the representation quality of the population. Save it into latek file if save = True
 		"""
@@ -126,7 +126,10 @@ class Acp(Analyse):
 
 
 
-	def contribution(self, save =True):
+	def pop_contribution(self, save =True):
+		"""
+		Compute the contribution of the population for the axes. Save it into latek file if save = True
+		"""
 		contr = self.new_coords*self.new_coords
 		contr = contr / contr.sum(axis=0)
 		contribution = pd.DataFrame(data=contr, index=self.pop_names, columns=list(range(1,self.acp.n_features_+1)))
@@ -138,6 +141,19 @@ class Acp(Analyse):
 			return contribution
 		else:
 			return None
+
+	def var_quality():
+		"""
+		Compute the representation quality of the variables. Save it into latek file if save = True
+		"""
+		qualVar = coordonneesDesVariables**2
+		qualVar*100
+
+		if save == False:
+			return qualVar
+		else:
+			return None
+
 
 
 	def corr_circle(self):

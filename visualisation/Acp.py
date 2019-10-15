@@ -117,7 +117,7 @@ class Acp(Analyse):
 		del qual
 		#quality.add_prefix('CP_')
 		quality.columns = ['CP_' + str(col) for col in quality.columns]
-		quality*100
+		quality=quality*100
 
 		if save == False:
 			return quality
@@ -135,19 +135,19 @@ class Acp(Analyse):
 		contribution = pd.DataFrame(data=contr, index=self.pop_names, columns=list(range(1,self.acp.n_features_+1)))
 		del contr
 		contribution.columns = ['CP_' + str(col) for col in contribution.columns]
-		contribution*100
+		contribution=contribution*100
 
 		if save == False:
 			return contribution
 		else:
 			return None
 
-	def var_quality():
+	def var_quality(self, save = True):
 		"""
 		Compute the representation quality of the variables. Save it into latek file if save = True
 		"""
-		qualVar = coordonneesDesVariables**2
-		qualVar*100
+		qualVar = self.var_new_coords**2
+		qualVar=qualVar*100
 
 		if save == False:
 			return qualVar
@@ -155,7 +155,61 @@ class Acp(Analyse):
 			return None
 
 
+	def var_contribution(self, save = True):
+		"""
+		Compute the contribution of the variables for the new axes. Save it into latek file if save = True
+		"""
+		contrVar=(self.var_new_coords**2)/(self.var_new_coords**2).sum(axis=0)
+		contrVar=contrVar*100
 
-	def corr_circle(self):
-		pass
+		if save == False:
+			return contrVar
+		else:
+			return None
+
+
+	def corr_circle(self, save = True):
+
+		"""
+		Compute the representation of variables in different factorial planes (variable cloud).
+		Save into latek file if save = True
+		"""
+		# x_lim = [-1.1,1.1]
+		# y_lim = [-1.1,1.1]
+		# cpt = 0
+		# plt.subplots(figsize=(10,10*d))
+		# for i in range(d-1):
+		#     for j in range(i+1,d):
+		#         cpt += 1
+		#         ax = plt.subplot('{}{}{}'.format(int(d*(d-1)/2),1,cpt))
+		#         # cercle unitaire
+		#         cercle = plt.Circle((0,0),1,color='red',fill=False)
+		#         ax.add_artist(cercle)
+		#         #
+		#         # projection du nuage des variables 
+		#         for k in range(len(nomDesVariables)):
+		#             ax.arrow(0, 0, coordonneesDesVariables.iloc[k,i], coordonneesDesVariables.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+		#             # Ornementation
+		#             plt.text(coordonneesDesVariables.iloc[k,i], coordonneesDesVariables.iloc[k,j], nomDesVariables[k])#,fontsize=fontsize)
+		#         if not coordonneesDesVariables_sup.shape[0] == 0:
+		#             for k in range(len(nomDesVariables_sup)):
+		#                 ax.arrow(0, 0, coordonneesDesVariables_sup.iloc[k,i], coordonneesDesVariables_sup.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='b', ec='b')
+		#                 # Ornementation
+		#                 plt.text(coordonneesDesVariables_sup.iloc[k,i], coordonneesDesVariables_sup.iloc[k,j], nomDesVariables_sup[k])#,fontsize=fontsize)
+		#         plt.title('Axes {} et {}'.format(i+1,j+1))
+		#         #
+		#         # ajout d'une grille
+		#         plt.grid(color='lightgray',linestyle='--')
+		#         # Ajouter des deux axes correspondants aux axes factoriels
+		#         ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+		#         plt.plot(plt.xlim(), np.zeros(2),'k-')
+		#         plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
+		#         #
+		#         ax.arrow(0, y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+		#         plt.plot(np.zeros(2),plt.ylim(),'k-')
+		#         plt.text(0,y_lim[1], "axe {:d}".format(j+1))
+		#         #        ax.set_ylim([-1.1, 1.1])
+		#         ax.set_xlim(x_lim)
+		#         ax.set_ylim(y_lim)
+		#         ax.set_aspect('equal')
 

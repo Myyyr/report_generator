@@ -23,6 +23,10 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from visualisation.Analyse import *
 
+from matplotlib import cm
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+
+
 
 class Acp(Analyse):
 	def __init__(self, data, param = None, save_path = "./tmp/report", norm = False, dimToKeepType = ('threshold', 95)):
@@ -68,7 +72,7 @@ class Acp(Analyse):
 		corrOldNew = np.corrcoef(self.data_norm.T,self.new_coords.T)
 		corrOldNew = corrOldNew[0:len(self.var_names),len(self.var_names):]
 		self.var_new_coords  = pd.DataFrame(data=corrOldNew,
-		                                       index=self.var_names,
+							                 index=self.var_names,
 		                                       columns=list(range(1,self.acp.n_features_+1)))
 		del corrOldNew
 		self.var_new_coords.columns = ['CP_' + str(col) for col in self.var_new_coords.columns]
@@ -113,6 +117,8 @@ class Acp(Analyse):
 			plt.show()
 		plt.close()
 
+
+
 		
 
 
@@ -127,6 +133,8 @@ class Acp(Analyse):
 		#quality.add_prefix('CP_')
 		quality.columns = ['CP_' + str(col) for col in quality.columns]
 		quality=quality*100
+
+
 
 		if save == False:
 			return quality
@@ -188,38 +196,103 @@ class Acp(Analyse):
 		cpt = 0
 		plt.subplots(figsize=(10,10*self.dim_to_Keep))
 		for i in range(self.dim_to_Keep-1):
-		    for j in range(i+1,self.dim_to_Keep):
-		        cpt += 1
-		        ax = plt.subplot('{}{}{}'.format(int(self.dim_to_Keep*(self.dim_to_Keep-1)/2),1,cpt))
-		        # cercle unitaire
-		        cercle = plt.Circle((0,0),1,color='red',fill=False)
-		        ax.add_artist(cercle)
-		        #
-		        # projection du nuage des variables 
-		        for k in range(len(self.var_names)):
-		            ax.arrow(0, 0, self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-		            # Ornementation
-		            plt.text(self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j], self.var_names[k])#,fontsize=fontsize)
-		        if save == False:
-		        	plt.title('Axes {} et {}'.format(i+1,j+1))
-		        #
-		        # ajout d'une grille
-		        plt.grid(color='lightgray',linestyle='--')
-		        # Ajouter des deux axes correspondants aux axes factoriels
-		        ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-		        plt.plot(plt.xlim(), np.zeros(2),'k-')
-		        plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
-		        #
-		        ax.arrow(0, y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-		        plt.plot(np.zeros(2),plt.ylim(),'k-')
-		        plt.text(0,y_lim[1], "axe {:d}".format(j+1))
-		        #        ax.set_ylim([-1.1, 1.1])
-		        ax.set_xlim(x_lim)
-		        ax.set_ylim(y_lim)
-		        ax.set_aspect('equal')
+			for j in range(i+1,self.dim_to_Keep):
+				cpt += 1
+				ax = plt.subplot('{}{}{}'.format(int(self.dim_to_Keep*(self.dim_to_Keep-1)/2),1,cpt))
+				# cercle unitaire
+				cercle = plt.Circle((0,0),1,color='red',fill=False)
+				ax.add_artist(cercle)
+				#
+				# projection du nuage des variables 
+				for k in range(len(self.var_names)):
+					ax.arrow(0, 0, self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+					# Ornementation
+					plt.text(self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j], self.var_names[k])#,fontsize=fontsize)
+				if save == False:
+					plt.title('Axes {} et {}'.format(i+1,j+1))
+				#
+				# ajout d'une grille
+				plt.grid(color='lightgray',linestyle='--')
+				# Ajouter des deux axes correspondants aux axes factoriels
+				ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+				plt.plot(plt.xlim(), np.zeros(2),'k-')
+				plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
+				#
+				ax.arrow(0, y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+				plt.plot(np.zeros(2),plt.ylim(),'k-')
+				plt.text(0,y_lim[1], "axe {:d}".format(j+1))
+				#		ax.set_ylim([-1.1, 1.1])
+				ax.set_xlim(x_lim)
+				ax.set_ylim(y_lim)
+				ax.set_aspect('equal')
 
 		if save == True:
 			plt.close()
 		else:
 			plt.plot()
+
+
+
+	def pop_cloud(self, save = True, categories = None, label = None, plot_threshold = 50, colortype = 'hsv'):
+		"""
+		Compute the representation of the cloud of individuals (new coordinates).
+		If save = True write latek file else plot it
+		"""
+
+		if len(self.pop_names) > 20:
+			hsv = cm.get_cmap(colortype, 256)
+			colormap = hsv(np.linspace(0,1,len(label)))
+			
+			qual = np.array(self.pop_quality(False))
+
+		cpt = 0
+		plt.subplots(figsize=(18,6*self.dim_to_Keep))
+		for i in range(self.dim_to_Keep-1):
+			for j in range(i+1,self.dim_to_Keep):
+				cpt += 1
+				ax = plt.subplot('{}{}{}'.format(int(self.dim_to_Keep*(self.dim_to_Keep-1)/2),1,cpt))
+				
+				if len(self.pop_names) != 0 and len(self.pop_names) <= 20 :
+					plt.plot(self.new_coords[:,i],self.new_coords[:,j],'o')
+					plt.title('Axes {} et {}'.format(i+1,j+1))
+					for k in  range(len(self.pop_names)):
+						plt.text(self.new_coords[k,i], self.new_coords[k,j], self.pop_names[k])#,fontsize=fontsize)
+				elif len(self.pop_names) > 20:
+					for lab in range(len(label)):
+						coords = self.new_coords[categories == lab]
+						qual_lab = qual[categories == lab]
+
+						coords = coords[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
+						cmap = colormap[categories[categories == lab]]
+						cmap = cmap[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
+						qual_lab = qual_lab[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
+						# print(coords[:,i].shape)
+						# print((10+qual_lab[:,i]+qual_lab[:,j]*0.5).shape)
+						# print((colormap[categories[categories == lab]]).shape)
+						plt.scatter(coords[:,i],coords[:,j], 
+									s=(((qual_lab[:,i]+qual_lab[:,j])/100)**5)*500, 
+									alpha = 0.9,
+									c=cmap, 
+									label = label[lab],
+									marker = '^')
+					plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+					plt.title('Axes {} et {}'.format(i+1,j+1))
+
+				# Ajouter les axes
+				plt.grid(color='lightgray',linestyle='--')
+				x_lim = plt.xlim()
+				ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+				plt.plot(plt.xlim(), np.zeros(2),'k-')
+				plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
+				y_lim = plt.ylim()
+				ax.arrow(0,y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+				plt.plot(np.zeros(2),plt.ylim(),'k-')
+				plt.text(0,y_lim[1], "axe {:d}".format(j+1))
+
+		if save == True:
+			plt.close()
+		else:
+			plt.plot()
+
+
 

@@ -25,7 +25,7 @@ from visualisation.Analyse import *
 
 
 class Acp(Analyse):
-	def __init__(self, data, param = None, save_path = "./tmp/report"):
+	def __init__(self, data, param = None, save_path = "./tmp/report", norm = False):
 		
 		Tools.__init__(self, data, param = param)
 		self.cache = {}
@@ -34,10 +34,6 @@ class Acp(Analyse):
 		if not os.path.exists(save_path):
 					os.makedirs(save_path + "/images")
 
-
-		self.acp = PCA()
-		self.cp = self.acp.fit(data)
-		self.new_coords = self.acp.fit_transform(data)
 
 		pop_list = list(data.index)
 		var_list = list(data)
@@ -49,6 +45,44 @@ class Acp(Analyse):
 		self.var_names = [var_list[i] for i in indice_var]
 
 		del pop_list,var_list,indice_pop,indice_var
+
+
+		# normalise the data
+		desc = self.data.describe()
+		self.means = desc.values[1,:]
+		self.stds = desc.values[2,:]
+		if norm:
+			self.data_norm = (data - self.means)/self.stds
+		else:
+			self.data_norm = data
+		del desc
+
+		# ACP
+
+		self.acp = PCA()
+		self.cp = self.acp.fit(self.data_norm)
+		self.new_coords = self.acp.fit_transform(self.data_norm)
+
+		
+
+		corrOldNew = np.corrcoef(self.data_norm.T,self.new_coords.T)
+		corrOldNew = corrOldNew[0:len(self.var_names),len(self.var_names):]
+		self.var_new_coords  = pd.DataFrame(data=corrOldNew,
+		                                       index=self.var_names,
+		                                       columns=list(range(1,self.acp.n_features_+1)))
+		del corrOldNew
+		self.var_new_coords.columns = ['CP_' + str(col) for col in self.var_new_coords.columns]
+		
+		
+
+	def get_var_new_coords(self):
+		return self.var_new_coords
+
+	def get_data_norm(self):
+		return self.data_norm
+
+	def get_new_coords(self):
+		return self.new_coords
 
 
 	def inertie(self, save = True):

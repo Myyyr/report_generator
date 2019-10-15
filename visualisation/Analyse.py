@@ -183,7 +183,7 @@ class Analyse(Tools):
 		plt.close()
 
 
-	def plot_series(self, legend, xlab, ylab, title):
+	def plot_series(self, legend, xlab, ylab, title, save = True):
 		"""
 		Plots and write latteksfile for time series
 		"""
@@ -193,16 +193,18 @@ class Analyse(Tools):
 		plt.ylabel(ylab);
 		# plt.title('Séries temporelles pour ' +str(len(legend))+ ' indictateurs de '+title); 
 		plt.grid(True)
+		if save:
+			i = 0
+			while os.path.exists(self.save_path+"/images/plotSeries"+str(i)+".png"):
+				i += 1
 
-		i = 0
-		while os.path.exists(self.save_path+"/images/plotSeries"+str(i)+".png"):
-			i += 1
-		plt.savefig(self.save_path+"/images/plotSeries"+str(i)+".png")
-		plt.close()
+			plt.savefig(self.save_path+"/images/plotSeries"+str(i)+".png")
+			plt.close()
 
-		self._add_figure("images/plotSeries"+str(i)+".png", 'Séries temporelles pour ' +str(len(legend))+ ' indictateurs de '+title, "series"+str(i))
+			self._add_figure("images/plotSeries"+str(i)+".png", 'Séries temporelles pour ' +str(len(legend))+ ' indictateurs de '+title, "series"+str(i))
 
-
+		else: 
+			plt.show()
 
 
 	

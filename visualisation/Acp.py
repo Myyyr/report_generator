@@ -185,7 +185,7 @@ class Acp(Analyse):
 			return None
 
 
-	def corr_circle(self, save = True):
+	def corr_circle(self, save = True, dims = []):
 
 		"""
 		Compute the representation of variables in different factorial planes (variable cloud).
@@ -194,37 +194,47 @@ class Acp(Analyse):
 		x_lim = [-1.1,1.1]
 		y_lim = [-1.1,1.1]
 		cpt = 0
-		plt.subplots(figsize=(10,10*self.dim_to_Keep))
-		for i in range(self.dim_to_Keep-1):
-			for j in range(i+1,self.dim_to_Keep):
-				cpt += 1
-				ax = plt.subplot('{}{}{}'.format(int(self.dim_to_Keep*(self.dim_to_Keep-1)/2),1,cpt))
-				# cercle unitaire
-				cercle = plt.Circle((0,0),1,color='red',fill=False)
-				ax.add_artist(cercle)
-				#
-				# projection du nuage des variables 
-				for k in range(len(self.var_names)):
-					ax.arrow(0, 0, self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-					# Ornementation
-					plt.text(self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j], self.var_names[k])#,fontsize=fontsize)
-				if save == False:
-					plt.title('Axes {} et {}'.format(i+1,j+1))
-				#
-				# ajout d'une grille
-				plt.grid(color='lightgray',linestyle='--')
-				# Ajouter des deux axes correspondants aux axes factoriels
-				ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-				plt.plot(plt.xlim(), np.zeros(2),'k-')
-				plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
-				#
-				ax.arrow(0, y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-				plt.plot(np.zeros(2),plt.ylim(),'k-')
-				plt.text(0,y_lim[1], "axe {:d}".format(j+1))
-				#		ax.set_ylim([-1.1, 1.1])
-				ax.set_xlim(x_lim)
-				ax.set_ylim(y_lim)
-				ax.set_aspect('equal')
+		if dims == []:
+			for i in range(self.dim_to_Keep-1):
+				for j in range(i+1,self.dim_to_Keep):
+					dims.append((i,j))
+		
+		plt.subplots(figsize=(10,10*len(dims)))
+
+		# for i in range(self.dim_to_Keep-1):
+		# 	for j in range(i+1,self.dim_to_Keep):
+		for item in dims:
+
+			i, j = item
+			cpt += 1
+			
+			ax = plt.subplot('{}{}{}'.format(len(dims),1,cpt))
+			# cercle unitaire
+			cercle = plt.Circle((0,0),1,color='red',fill=False)
+			ax.add_artist(cercle)
+			#
+			# projection du nuage des variables 
+			for k in range(len(self.var_names)):
+				ax.arrow(0, 0, self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+				# Ornementation
+				plt.text(self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j], self.var_names[k])#,fontsize=fontsize)
+			if save == False:
+				plt.title('Axes {} et {}'.format(i+1,j+1))
+			#
+			# ajout d'une grille
+			plt.grid(color='lightgray',linestyle='--')
+			# Ajouter des deux axes correspondants aux axes factoriels
+			ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+			plt.plot(plt.xlim(), np.zeros(2),'k-')
+			plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
+			#
+			ax.arrow(0, y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+			plt.plot(np.zeros(2),plt.ylim(),'k-')
+			plt.text(0,y_lim[1], "axe {:d}".format(j+1))
+			#		ax.set_ylim([-1.1, 1.1])
+			ax.set_xlim(x_lim)
+			ax.set_ylim(y_lim)
+			ax.set_aspect('equal')
 
 		if save == True:
 			plt.close()
@@ -233,7 +243,7 @@ class Acp(Analyse):
 
 
 
-	def pop_cloud(self, save = True, categories = None, label = None, plot_threshold = 50, colortype = 'hsv'):
+	def pop_cloud(self, save = True, categories = None, label = None, plot_threshold = 50, colortype = 'hsv' , size_factor = (5,500)):
 		"""
 		Compute the representation of the cloud of individuals (new coordinates).
 		If save = True write latek file else plot it
@@ -270,7 +280,7 @@ class Acp(Analyse):
 						# print((10+qual_lab[:,i]+qual_lab[:,j]*0.5).shape)
 						# print((colormap[categories[categories == lab]]).shape)
 						plt.scatter(coords[:,i],coords[:,j], 
-									s=(((qual_lab[:,i]+qual_lab[:,j])/100)**5)*500, 
+									s=(((qual_lab[:,i]+qual_lab[:,j])/100)**size_factor[0])*size_factor[1], 
 									alpha = 0.9,
 									c=cmap, 
 									label = label[lab],

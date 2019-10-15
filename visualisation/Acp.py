@@ -199,7 +199,7 @@ class Acp(Analyse):
 				for j in range(i+1,self.dim_to_Keep):
 					dims.append((i,j))
 		
-		plt.subplots(figsize=(10,10*len(dims)))
+		plt.subplots(figsize=(10,10*(len(dims)+1)))
 
 		# for i in range(self.dim_to_Keep-1):
 		# 	for j in range(i+1,self.dim_to_Keep):
@@ -219,7 +219,7 @@ class Acp(Analyse):
 				# Ornementation
 				plt.text(self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j], self.var_names[k])#,fontsize=fontsize)
 			if save == False:
-				plt.title('Axes {} et {}'.format(i+1,j+1))
+				plt.title('Axes {} et {}'.format(i+1,j+1), y=1.08)
 			#
 			# ajout d'une grille
 			plt.grid(color='lightgray',linestyle='--')
@@ -237,13 +237,22 @@ class Acp(Analyse):
 			ax.set_aspect('equal')
 
 		if save == True:
+			i = 0
+			while os.path.exists(self.save_path+"/images/plotCorrCircle"+str(i)+".png"):
+				i += 1
+
+
+			plt.savefig(self.save_path+"/images/plotCorrCircle"+str(i)+".png")
 			plt.close()
+
+			self._add_figure("images/plotCorrCircle"+str(i)+".png", 'Cercle de corélation', "ccor"+str(i))
+			
 		else:
 			plt.plot()
 
 
 
-	def pop_cloud(self, save = True, categories = None, label = None, plot_threshold = 50, colortype = 'hsv' , size_factor = (5,500)):
+	def pop_cloud(self, save = True, categories = None, label = None, plot_threshold = 50, colortype = 'hsv' , size_factor = (5,500), dims = []):
 		"""
 		Compute the representation of the cloud of individuals (new coordinates).
 		If save = True write latek file else plot it
@@ -255,52 +264,66 @@ class Acp(Analyse):
 			
 			qual = np.array(self.pop_quality(False))
 
+		if dims == []:
+			for i in range(self.dim_to_Keep-1):
+				for j in range(i+1,self.dim_to_Keep):
+					dims.append((i,j))
 		cpt = 0
-		plt.subplots(figsize=(18,6*self.dim_to_Keep))
-		for i in range(self.dim_to_Keep-1):
-			for j in range(i+1,self.dim_to_Keep):
-				cpt += 1
-				ax = plt.subplot('{}{}{}'.format(int(self.dim_to_Keep*(self.dim_to_Keep-1)/2),1,cpt))
-				
-				if len(self.pop_names) != 0 and len(self.pop_names) <= 20 :
-					plt.plot(self.new_coords[:,i],self.new_coords[:,j],'o')
-					plt.title('Axes {} et {}'.format(i+1,j+1))
-					for k in  range(len(self.pop_names)):
-						plt.text(self.new_coords[k,i], self.new_coords[k,j], self.pop_names[k])#,fontsize=fontsize)
-				elif len(self.pop_names) > 20:
-					for lab in range(len(label)):
-						coords = self.new_coords[categories == lab]
-						qual_lab = qual[categories == lab]
+		plt.subplots(figsize=(18,6*(len(dims)+1)))
+		# for i in range(self.dim_to_Keep-1):
+		# 	for j in range(i+1,self.dim_to_Keep):
+		for item in dims:
+			i,j = item
+			cpt += 1
+			ax = plt.subplot('{}{}{}'.format(len(dims) ,1,cpt))
+			
+			if len(self.pop_names) != 0 and len(self.pop_names) <= 20 :
+				plt.plot(self.new_coords[:,i],self.new_coords[:,j],'o')
+				plt.title('Axes {} et {}'.format(i+1,j+1))
+				for k in  range(len(self.pop_names)):
+					plt.text(self.new_coords[k,i], self.new_coords[k,j], self.pop_names[k])#,fontsize=fontsize)
+			elif len(self.pop_names) > 20:
+				for lab in range(len(label)):
+					coords = self.new_coords[categories == lab]
+					qual_lab = qual[categories == lab]
 
-						coords = coords[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
-						cmap = colormap[categories[categories == lab]]
-						cmap = cmap[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
-						qual_lab = qual_lab[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
-						# print(coords[:,i].shape)
-						# print((10+qual_lab[:,i]+qual_lab[:,j]*0.5).shape)
-						# print((colormap[categories[categories == lab]]).shape)
-						plt.scatter(coords[:,i],coords[:,j], 
-									s=(((qual_lab[:,i]+qual_lab[:,j])/100)**size_factor[0])*size_factor[1], 
-									alpha = 0.9,
-									c=cmap, 
-									label = label[lab],
-									marker = '^')
-					plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-					plt.title('Axes {} et {}'.format(i+1,j+1))
+					coords = coords[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
+					cmap = colormap[categories[categories == lab]]
+					cmap = cmap[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
+					qual_lab = qual_lab[qual_lab[:,i]+qual_lab[:,j] >= plot_threshold]
+					# print(coords[:,i].shape)
+					# print((10+qual_lab[:,i]+qual_lab[:,j]*0.5).shape)
+					# print((colormap[categories[categories == lab]]).shape)
+					plt.scatter(coords[:,i],coords[:,j], 
+								s=(((qual_lab[:,i]+qual_lab[:,j])/100)**size_factor[0])*size_factor[1], 
+								alpha = 0.9,
+								c=cmap, 
+								label = label[lab],
+								marker = '^')
+				plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., ncol = 2, handleheight=2.4, labelspacing=0.05)
+				plt.title('Axes {} et {}'.format(i+1,j+1))
 
-				# Ajouter les axes
-				plt.grid(color='lightgray',linestyle='--')
-				x_lim = plt.xlim()
-				ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-				plt.plot(plt.xlim(), np.zeros(2),'k-')
-				plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
-				y_lim = plt.ylim()
-				ax.arrow(0,y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-				plt.plot(np.zeros(2),plt.ylim(),'k-')
-				plt.text(0,y_lim[1], "axe {:d}".format(j+1))
+			# Ajouter les axes
+			plt.grid(color='lightgray',linestyle='--')
+			x_lim = plt.xlim()
+			ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+			plt.plot(plt.xlim(), np.zeros(2),'k-')
+			plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
+			y_lim = plt.ylim()
+			ax.arrow(0,y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+			plt.plot(np.zeros(2),plt.ylim(),'k-')
+			plt.text(0,y_lim[1], "axe {:d}".format(j+1))
 
 		if save == True:
+			i = 0
+			while os.path.exists(self.save_path+"/images/indCloud"+str(i)+".png"):
+				i += 1
+
+
+			plt.savefig(self.save_path+"/images/indCloud"+str(i)+".png")
 			plt.close()
+
+			self._add_figure("images/indCloud"+str(i)+".png", 'Nuage de points des individus', "cloud"+str(i))
 		else:
 			plt.plot()
 

@@ -25,7 +25,7 @@ from visualisation.Analyse import *
 
 
 class Acp(Analyse):
-	def __init__(self, data, param = None, save_path = "./tmp/report", norm = False):
+	def __init__(self, data, param = None, save_path = "./tmp/report", norm = False, dimToKeepType = ('threshold', 95)):
 		
 		Tools.__init__(self, data, param = param)
 		self.cache = {}
@@ -74,6 +74,15 @@ class Acp(Analyse):
 		self.var_new_coords.columns = ['CP_' + str(col) for col in self.var_new_coords.columns]
 		
 		
+		# Dimension to keep
+		if dimToKeepType[0] == 'threshold':
+			threshold = dimToKeepType[1]
+			self.dim_to_Keep = np.argmax(np.cumsum(self.acp.explained_variance_ratio_)>=threshold/100)+1
+		elif dimToKeepType[0] == 'fix':
+			self.dim_to_Keep = dimToKeepType[1]
+		else:
+			self.dimToKeepType = 2
+
 
 	def get_var_new_coords(self):
 		return self.var_new_coords
@@ -172,44 +181,45 @@ class Acp(Analyse):
 
 		"""
 		Compute the representation of variables in different factorial planes (variable cloud).
-		Save into latek file if save = True
+		Save into latek file if save = True else plot it
 		"""
-		# x_lim = [-1.1,1.1]
-		# y_lim = [-1.1,1.1]
-		# cpt = 0
-		# plt.subplots(figsize=(10,10*d))
-		# for i in range(d-1):
-		#     for j in range(i+1,d):
-		#         cpt += 1
-		#         ax = plt.subplot('{}{}{}'.format(int(d*(d-1)/2),1,cpt))
-		#         # cercle unitaire
-		#         cercle = plt.Circle((0,0),1,color='red',fill=False)
-		#         ax.add_artist(cercle)
-		#         #
-		#         # projection du nuage des variables 
-		#         for k in range(len(nomDesVariables)):
-		#             ax.arrow(0, 0, coordonneesDesVariables.iloc[k,i], coordonneesDesVariables.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-		#             # Ornementation
-		#             plt.text(coordonneesDesVariables.iloc[k,i], coordonneesDesVariables.iloc[k,j], nomDesVariables[k])#,fontsize=fontsize)
-		#         if not coordonneesDesVariables_sup.shape[0] == 0:
-		#             for k in range(len(nomDesVariables_sup)):
-		#                 ax.arrow(0, 0, coordonneesDesVariables_sup.iloc[k,i], coordonneesDesVariables_sup.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='b', ec='b')
-		#                 # Ornementation
-		#                 plt.text(coordonneesDesVariables_sup.iloc[k,i], coordonneesDesVariables_sup.iloc[k,j], nomDesVariables_sup[k])#,fontsize=fontsize)
-		#         plt.title('Axes {} et {}'.format(i+1,j+1))
-		#         #
-		#         # ajout d'une grille
-		#         plt.grid(color='lightgray',linestyle='--')
-		#         # Ajouter des deux axes correspondants aux axes factoriels
-		#         ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-		#         plt.plot(plt.xlim(), np.zeros(2),'k-')
-		#         plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
-		#         #
-		#         ax.arrow(0, y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
-		#         plt.plot(np.zeros(2),plt.ylim(),'k-')
-		#         plt.text(0,y_lim[1], "axe {:d}".format(j+1))
-		#         #        ax.set_ylim([-1.1, 1.1])
-		#         ax.set_xlim(x_lim)
-		#         ax.set_ylim(y_lim)
-		#         ax.set_aspect('equal')
+		x_lim = [-1.1,1.1]
+		y_lim = [-1.1,1.1]
+		cpt = 0
+		plt.subplots(figsize=(10,10*self.dim_to_Keep))
+		for i in range(self.dim_to_Keep-1):
+		    for j in range(i+1,self.dim_to_Keep):
+		        cpt += 1
+		        ax = plt.subplot('{}{}{}'.format(int(self.dim_to_Keep*(self.dim_to_Keep-1)/2),1,cpt))
+		        # cercle unitaire
+		        cercle = plt.Circle((0,0),1,color='red',fill=False)
+		        ax.add_artist(cercle)
+		        #
+		        # projection du nuage des variables 
+		        for k in range(len(self.var_names)):
+		            ax.arrow(0, 0, self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+		            # Ornementation
+		            plt.text(self.var_new_coords.iloc[k,i], self.var_new_coords.iloc[k,j], self.var_names[k])#,fontsize=fontsize)
+		        if save == False:
+		        	plt.title('Axes {} et {}'.format(i+1,j+1))
+		        #
+		        # ajout d'une grille
+		        plt.grid(color='lightgray',linestyle='--')
+		        # Ajouter des deux axes correspondants aux axes factoriels
+		        ax.arrow(x_lim[0], 0, x_lim[1]-x_lim[0], 0,length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+		        plt.plot(plt.xlim(), np.zeros(2),'k-')
+		        plt.text(x_lim[1], 0, "axe {:d}".format(i+1))
+		        #
+		        ax.arrow(0, y_lim[0], 0, y_lim[1]-y_lim[0],length_includes_head=True, head_width=0.05, head_length=0.1, fc='k', ec='k')
+		        plt.plot(np.zeros(2),plt.ylim(),'k-')
+		        plt.text(0,y_lim[1], "axe {:d}".format(j+1))
+		        #        ax.set_ylim([-1.1, 1.1])
+		        ax.set_xlim(x_lim)
+		        ax.set_ylim(y_lim)
+		        ax.set_aspect('equal')
+
+		if save == True:
+			plt.close()
+		else:
+			plt.plot()
 

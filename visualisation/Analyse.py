@@ -8,42 +8,41 @@ of a data set.
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
 import shutil
 import seaborn as sns
 
 
+import sys
+import os
 
-class Analyse():
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
+
+from tools.Tools import *
+
+
+class Analyse(Tools):
 	def __init__(self, data, param = None, save_path = "./tmp/report"):
-		self.data = data
-		self.n, self.p = data.shape
-		self.param = param
-		self.save_path = save_path
-		self.local_path = os.path.dirname(os.path.realpath(__file__))
-		self.main = ""
+		
+		Tools.__init__(self, data, param = None)
 		self.cache = {}
-
+		self.local_path = os.path.dirname(os.path.realpath(__file__))
+		self.save_path = save_path
 		if not os.path.exists(save_path):
-			os.makedirs(save_path + "/images")
+					os.makedirs(save_path + "/images")
 
-		plt.rcParams['font.size'] = 18
-		plt.rcParams['figure.figsize'] = (18*2, 8*2)
+	def set_save_path(self,sp):
+		self.save_path = sp
 
-
-		if param == None:
-			self.param = {'title' : 'title',
-						'exercice' : 'exercice',
-						'donnees' : 'donnees',
-						'contenue_donnees' : 'contenue_donnees',
-						'cours' : 'cours'}
 
 	def tek_load(self, path = None):
 		"""
 		Load a latek file from path
 		"""
 		if path == None:
-			path = self.save_path + "/"+name
+			path = self.save_path + "/main.tex"
 
 		self.main = self._read_file(path)
 
@@ -149,7 +148,7 @@ class Analyse():
 		else:
 			text += "De plus, les écarts types de chaque variables sont équivalentes, avec une valeur proche de {}. Donc il ne sera pas obligatoire de réduire les données pour obtenir des valeurs comparables entre elles. ".format(np.mean(stds))
 
-		text += "\\\\ \n\n\n\n\n\n\n\n\n\n"
+		text += "\\\\ \n\n\n"
 		self.main += text
 
 
@@ -170,6 +169,9 @@ class Analyse():
 
 
 	def dispertion(self):
+		"""
+		Create the dispertion plots and the histogrammes, add it in the tex file
+		"""
 		g = sns.pairplot(self.data.iloc[range(self.n),range(self.p)], diag_kind="kde", markers="+",
 		                  plot_kws=dict(s=50, edgecolor="b", linewidth=1),
 		                  diag_kws=dict(shade=True))
@@ -180,65 +182,36 @@ class Analyse():
 
 		plt.close()
 
-	def _add_table(self, text, caption, label, struct):
-		"""
-		Write latek table
-		"""
-		new_text = text.replace(" ", "&")
-		while "&&" in new_text:
-			new_text = new_text.replace("&&", "&")
-		new_text = new_text.replace('&', ' & ')
-		new_text = new_text.replace('%', '\\%')
-		new_text = new_text.replace('_', '\\_')
-		new_text = new_text.replace("\n", " \\\\\n\\hline\n")
-		new_text = "\\hline\n" + new_text + " \\\\\n\\hline"
-		
-		tabular = self._read_file(self.local_path + "/table.txt")
-		tabular = self._complete_texte(tabular, 'struct', struct)
-		tabular = self._complete_texte(tabular, 'label', label)
-		tabular = self._complete_texte(tabular, 'caption', caption)
-		tabular = self._complete_texte(tabular, 'table', new_text)
 
-		self.main += tabular
-
-	def _read_file(self, path):
+	def plot_series(self, legend, xlab, ylab, title):
 		"""
-		Tool to get texte from a file
+		Plots and write latteksfile for time series
 		"""
-		file = open(path)
-		text = file.read()
-		file.close()
+		plt.plot(self.data)
+		plt.legend(legend, bbox_to_anchor=(1, 1), loc='upper left', ncol=1)
+		plt.xlabel(xlab);
+		plt.ylabel(ylab);
+		# plt.title('Séries temporelles pour ' +str(len(legend))+ ' indictateurs de '+title); 
+		plt.grid(True)
 
-		return text
+		i = 0
+		while os.path.exists(self.save_path+"/images/plotSeries"+str(i)+".png"):
+			i += 1
+		plt.savefig(self.save_path+"/images/plotSeries"+str(i)+".png")
+		plt.close()
+
+		self._add_figure("images/plotSeries"+str(i)+".png", 'Séries temporelles pour ' +str(len(legend))+ ' indictateurs de '+title, "series"+str(i))
 
 
-	def _complete_texte(self, texte, key, param = None):
-		"""
-		Complete the text where there is the key word by parameter
-		"""
-		index = texte.find('#'+key+'#')
-		if param == None:
-			return texte[:index] + self.param[key] + texte[(index + len(key) + 2):]
-		else:
-			return texte[:index] + param + texte[(index + len(key) + 2):]
 
 
-	def _add_figure(self,path, caption, label):
-		"""
-		add figure in the latek file
-		"""
-		fig = self._read_file(self.local_path + "/figure.txt")
-		fig = self._complete_texte(fig, 'file', param = path)
-		fig = self._complete_texte(fig, 'caption', param = caption)
-		fig = self._complete_texte(fig, 'label', param = label)
-
-		self.main += fig
+	
 	
 
 
-data = pd.read_csv("notes.dat",sep='\t',index_col=0)
-ann = Analyse(data, save_path = "/home/myr/tmp/report")
-ann.tek_create()
+# data = pd.read_csv("notes.dat",sep='\t',index_col=0)
+# ann = Analyse(data, save_path = "/home/myr/tmp/report")
+# ann.tek_create()
 
 
 
